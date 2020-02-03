@@ -2,6 +2,7 @@
 namespace Rindow\Math\Plot\System;
 
 use ArrayObject;
+use InvalidArgumentException;
 
 class Colormap
 {
@@ -9,7 +10,7 @@ class Colormap
 
     public function __construct(string $name)
     {
-        $filename = __DIR__.'/ColorMap/'.$name.'.php';
+        $filename = __DIR__.'/Colormap/'.$name.'.php';
         if(!file_exists($filename))
             throw new InvalidArgumentException('colormap file not found.');
         $this->colormap = require $filename;
