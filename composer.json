@@ -1,0 +1,17 @@
+{
+    "name": "rindow/rindow-math-plot",
+    "type": "library",
+    "description": "Mathematical graph plotting library",
+    "keywords": ["rindow","math","plotting","graph"],
+    "license": "BSD-3-Clause",
+    "require": {
+        "php": ">=7.2",
+        "interop-phpobjects/polite-math": "^1.0",
+        "rindow/rindow-math-matrix": "^1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Rindow\\Math\\Plot\\": "src/"
+        }
+    }
+}
