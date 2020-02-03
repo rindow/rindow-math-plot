@@ -39,7 +39,7 @@ class Test extends TestCase
         $config = $this->getConfig();
         $mo = new MatrixOperator;
         $plt = new Plot($config,$mo);
-        $cmap = new \Rindow\Math\Plot\System\ColorMap('viridis');
+        $cmap = new \Rindow\Math\Plot\System\Colormap('viridis');
         $x = $mo->array($cmap->getMapData());
         $plt->plot($x);
         $plt->show();
