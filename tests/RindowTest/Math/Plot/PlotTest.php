@@ -6,6 +6,7 @@ use Rindow\Math\Matrix\MatrixOperator;
 use Rindow\Math\Plot\Plot;
 use Rindow\Math\Plot\Renderer\GDDriver;
 use Interop\Polite\Math\Matrix\NDArray;
+use RuntimeException;
 
 class Test extends TestCase
 {
@@ -117,10 +118,6 @@ class Test extends TestCase
         $this->assertTrue(true);
     }
 
-    /**
-    * @expectedException        RuntimeException
-    * @expectedExceptionMessage "log" scale cannot be used for negative values.
-     */
     public function testInvalidLogScale()
     {
         $config = $this->getConfig();
@@ -131,6 +128,8 @@ class Test extends TestCase
         $plt->figure('new',[465,480]);
         $plt->plot($x,$x);
         $plt->xscale('log');
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('"log" scale cannot be used for negative values.');
         $plt->show();
 
         $this->assertTrue(true);
