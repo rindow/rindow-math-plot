@@ -18,8 +18,8 @@ class GDDriver
     protected $lastLineStyle;
     protected $lastLineStyleColor;
     protected $viewer = 'RINDOW_MATH_PLOT_VIEWER';
-    protected $skipCleaning = false;
     protected $skipRunViewer = false;
+    protected $mkdir = false;
 
     public function __construct(
         bool $bottomOrigin=null,
@@ -35,12 +35,9 @@ class GDDriver
             $this->setImageContext($image);
         }
         if($filename==null) {
-            $filename = sys_get_temp_dir();
+            $filename = sys_get_temp_dir().'/rindowplot';
         }
-        if($skipCleaning!==null) {
-            $this->skipCleaning = $skipCleaning;
-        }
-        if($skipCleaning!==null) {
+        if($skipRunViewer!==null) {
             $this->skipRunViewer = $skipRunViewer;
         }
         $this->setTempFile($filename);
@@ -278,8 +275,7 @@ class GDDriver
             return;
         }
         if($filename==null) {
-            if(!$this->skipCleaning)
-                $this->deleteTempfiles('plo');
+            $this->makeDirectory();
             $filename = tempnam($this->filename,'plo');
             rename($filename, $filename.'.png');
             $filename = $filename.'.png';
@@ -293,6 +289,16 @@ class GDDriver
         }
     }
 
+    protected function makeDirectory()
+    {
+        if($this->mkdir)
+            return;
+        if(!file_exists($this->filename)) {
+            @mkdir($this->filename,true);
+        }
+        $this->mkdir = true;
+    }
+
     public function cleanUp()
     {
         $this->deleteTempfiles('plo');
@@ -300,6 +306,7 @@ class GDDriver
 
     protected function deleteTempfiles($prefix)
     {
+        $this->makeDirectory();
         if(($d=opendir($this->filename))==false)
             return;
         $pattern = '/^'.$prefix.'.*\\.png$/';

@@ -21,7 +21,7 @@ class Plot
     protected $renderer;
     protected $cmapManager;
     protected $currentFig = -1;
-    protected $skipCleaning;
+    protected $skipCleaning = false;
     protected $skipRunViewer;
 
     public function __construct(array $config=null,$matrixOperator=null,$renderer=null,$cmapManager=null)
@@ -218,6 +218,8 @@ class Plot
     public function show(string $filename=null)
     {
         $renderer = $this->getRenderer();
+        if(!$this->skipCleaning)
+            $renderer->cleanUp();
         foreach ($this->figures as $figure) {
             [$width,$height] = $figure->getFigSize();
             $renderer->open($width,$height);
