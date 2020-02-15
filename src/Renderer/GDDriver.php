@@ -294,7 +294,7 @@ class GDDriver
         if($this->mkdir)
             return;
         if(!file_exists($this->filename)) {
-            @mkdir($this->filename,true);
+            @mkdir($this->filename,0777,true);
         }
         $this->mkdir = true;
     }
