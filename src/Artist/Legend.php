@@ -4,13 +4,13 @@ namespace Rindow\Math\Plot\Artist;
 use ArrayObject;
 use Rindow\Math\Plot\System\Configured;
 use Rindow\Math\Plot\System\Configure;
+use DomainException;
 
 class Legend implements OverlapChecker
 {
     use Configured;
 
     protected $renderer;
-    protected $plotArea;
     protected $labels;
     protected $handles;
     protected $areas;
@@ -23,18 +23,17 @@ class Legend implements OverlapChecker
     protected $legendMargin = 6;
     protected $fontSize = 4;
 
-    public function __construct(Configure $config, $renderer, array $plotArea, array $handles,array $labels)
+    public function __construct(Configure $config, $renderer, array $handles,array $labels)
     {
         $this->loadConfigure($config,
             ['lineSpacing','colorBoxWidth','legendMargin','fontSize'],
             'legend');
         $this->renderer = $renderer;
-        $this->plotArea = $plotArea;
         $this->handles = $handles;
         $this->labels = $labels;
     }
 
-    public function calcAreas()
+    public function calcAreas($plotArea)
     {
         $maxLabelWidth = $maxLabelHeight = 0;
         $this->font = $this->renderer->allocateFont($this->fontSize);
@@ -49,7 +48,7 @@ class Legend implements OverlapChecker
         $height = $maxLabelHeight*$count+
             $this->lineSpacing*($count-1) + $this->legendMargin*2;
 
-        [$plotAreaLeft,$plotAreaBottom,$plotAreaWidth,$plotAreaHeight] = $this->plotArea;
+        [$plotAreaLeft,$plotAreaBottom,$plotAreaWidth,$plotAreaHeight] = $plotArea;
         $plotAreaRight = $plotAreaLeft+$plotAreaWidth-1-$this->legendMargin;
         $plotAreaTop = $plotAreaBottom+$plotAreaHeight-1-$this->legendMargin;
         $plotAreaLeft = $plotAreaLeft+$this->legendMargin;
@@ -151,6 +150,9 @@ class Legend implements OverlapChecker
         $color = $this->renderer->allocateColor('gray');
         $this->renderer->rectangle($x1,$y1,$x2,$y2,$color);
         foreach($this->handles as $key => $handle) {
+            if(!($handle instanceof DataArtist)) {
+                throw new DomainException('handles must be array of DataArtist');
+            }
             $ypos = $y2 - (int)(($txtHeight+$this->lineSpacing)*(0.5+$key))
                     - $this->legendMargin;
             $xpos = $x1+$this->legendMargin;

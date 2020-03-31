@@ -25,6 +25,7 @@ class Test extends TestCase
             //'frame.yTickPosition' => 'right',
             //'frame.frameColor' => 'red',
             //'frame.labelColor' => 'green',
+            //'frame.framePadding' => 0,
         ];
     }
 
@@ -35,7 +36,7 @@ class Test extends TestCase
         $this->assertTrue(true);
     }
 
-    public function testColorMap()
+    public function testColorMap0()
     {
         $config = $this->getConfig();
         $mo = new MatrixOperator;
@@ -59,7 +60,7 @@ class Test extends TestCase
         $cmap = 'magma';
         [$fig,$ax] = $plt->subplots(1,3);
         $ax[0]->imshow($x,$cmap);
-        $ax[0]->axis('equal');
+        //$ax[0]->setAspect('equal');
         $ax[0]->setFrame(false);
         $ax[1]->plot($x->reshape([256]));
         $cmap = new \Rindow\Math\Plot\System\Colormap($cmap);
@@ -67,6 +68,115 @@ class Test extends TestCase
         $ax[2]->plot($x);
         $plt->show();
 
+        $this->assertTrue(true);
+    }
+
+    public function testColormap3()
+    {
+        $config = $this->getConfig();
+        $mo = new MatrixOperator;
+        $plt = new Plot($config,$mo);
+
+        $x0 = $mo->arange(256)->reshape([16,16]);
+        $x1 = $mo->op($x0,'-',128);
+        $x2 = $mo->op($mo->astype($x1,NDArray::float32),'/',256);
+        $cmap = 'magma';
+        [$fig,$ax] = $plt->subplots(1,3);
+        $ax[0]->setDataAreaMargin(0);
+        $ax[0]->imshow($x0,$cmap);
+        $ax[1]->imshow($x1,$cmap,[-64,64]);
+        $ax[2]->imshow($x2,$cmap);
+        $plt->show();
+        $this->assertTrue(true);
+    }
+
+    public function testColorbar0()
+    {
+        $config = $this->getConfig();
+        $mo = new MatrixOperator;
+        $plt = new Plot($config,$mo);
+
+        $x0 = $mo->random()->randn([100,100]);
+        $x1 = $mo->arange(256,-127)->reshape([16,16]);
+        $x2 = $mo->op($mo->astype($x1,NDArray::float32),'/',256);
+        [$fig,$ax] = $plt->subplots(3);
+        //$ax[0]->setFrame(false);
+        $ax[0]->setAspect('equal');
+        $ax[0]->setDataAreaMargin(0);
+        $img0 = $ax[0]->imshow($x0);
+        //$img1 = $ax[1]->imshow($x1);
+        $img2 = $ax[2]->imshow($x2);
+        $fig->colorbar($img0,$ax[0]);
+        $fig->colorbar($img2,$ax[1],true);
+        $fig->colorbar($img2,$ax[2]);
+        $plt->show();
+        $this->assertTrue(true);
+    }
+
+    public function testColorbar1()
+    {
+        $config = $this->getConfig();
+        $mo = new MatrixOperator;
+        $plt = new Plot($config,$mo);
+
+        $x = $mo->random()->randn([10,10]);
+        $img = $plt->imshow($x);
+        $plt->colorbar($img);
+        $plt->show();
+        $this->assertTrue(true);
+    }
+
+    public function testColorbar2()
+    {
+        $config = $this->getConfig();
+        $mo = new MatrixOperator;
+        $plt = new Plot($config,$mo);
+
+        $x = $mo->random()->randn([10,10]);
+        $img = $plt->imshow($x,'jet',[-4,6],[-3,3,0,7]);
+        $plt->colorbar($img);
+        $plt->show();
+        $this->assertTrue(true);
+    }
+
+    public function testColorbar3()
+    {
+        $config = $this->getConfig();
+        $mo = new MatrixOperator;
+        $plt = new Plot($config,$mo);
+
+        $fn = function($x) {
+            return 1/sqrt(2*pi())*exp(-$x*$x/2);
+        };
+        $x1 = $mo->f($fn,$mo->arange(100,-5.0, 0.08));
+        $x2 = $mo->f($fn,$mo->arange(100,-3.0, 0.08));
+        $y1 = $mo->la()->multiply($x1,$mo->la()->multiply($x1,$mo->ones([100,100])),true);
+        $y2 = $mo->la()->multiply($x2,$mo->la()->multiply($x2,$mo->ones([100,100])),true);
+        $y = $mo->op($y1,'-',$y2);
+        $img = $plt->imshow($y,null,null,[-4,4,-4,4]);
+        $plt->colorbar($img);
+        $plt->show();
+        $this->assertTrue(true);
+    }
+
+    public function testFrameEdge()
+    {
+        $config = $this->getConfig();
+        $mo = new MatrixOperator;
+        $plt = new Plot($config,$mo);
+
+        $x = $mo->array([0,1]);
+        $y = $mo->array([0,1]);
+        [$fig,$ax] = $plt->subplots(3);
+        //$ax[0]->setFrame(false);
+        $ax[0]->setAspect('equal');
+        $ax[0]->setDataAreaMargin(0);
+        $ax[0]->plot($x,$y);
+        $ax[1]->setAspect('equal');
+        $ax[1]->setDataAreaMargin(0);
+        $ax[1]->plot($mo->scale(50,$x),$mo->scale(50,$y));
+        $ax[2]->plot($x,$y);
+        $plt->show();
         $this->assertTrue(true);
     }
 
@@ -98,6 +208,38 @@ class Test extends TestCase
         [$fig,$ax] = $plt->subplots(3,3);
         $ax[0]->plot($x,$x);
         $ax[1]->plot($x,$x);
+        $plt->show();
+
+        $this->assertTrue(true);
+    }
+
+    public function testXticks()
+    {
+        $config = $this->getConfig();
+        $mo = new MatrixOperator;
+        $plt = new Plot($config,$mo);
+
+        $x = $mo->arange(5,1);
+        $xlabel = ['Jan','Feb','Mar','Apr','May'];
+        $data0 = $mo->array([0.1, 0.3, 0.7, 1.2, 2.8]);
+        $plt->plot($x,$data0);
+        $plt->xticks($x,$xlabel);
+        $plt->show();
+
+        $this->assertTrue(true);
+    }
+
+    public function testYticks()
+    {
+        $config = $this->getConfig();
+        $mo = new MatrixOperator;
+        $plt = new Plot($config,$mo);
+
+        $y = $mo->arange(6, 0.0, 0.5);
+        $ylabel = ['0m','0.5m','1m','1.5m','2m','2.5m'];
+        $data0 = $mo->array([0.1, 0.3, 0.7, 1.2, 2.8]);
+        $plt->plot($data0);
+        $plt->yticks($y,$ylabel);
         $plt->show();
 
         $this->assertTrue(true);
@@ -163,11 +305,9 @@ class Test extends TestCase
         $explodes = [0, 0.1, 0, 0];
         [$fig,$ax] = $plt->subplots(1,2);
         $ax[0]->pie($x,$labels,$startangle=90,$autopct='%1.1f%%',$explodes);
-        $ax[0]->axis('equal');
         $ax[0]->setTitle('labels sample');
         $pies = $ax[1]->pie($x,null,$startangle=90,$autopct='%1.1f%%',$explodes);
         $ax[1]->legend($pies,$labels);
-        $ax[1]->axis('equal');
         $ax[1]->setTitle('legend sample');
         $plt->show();
 
@@ -314,37 +454,28 @@ class Test extends TestCase
 
         $this->assertTrue(true);
     }
+
+    public function testShowFixedFile()
+    {
+        $config = $this->getConfig();
+        $mo = new MatrixOperator;
+        $plt = new Plot($config,$mo);
+
+        $plt->plot($mo->arange(5));
+        $plt->show(RINDOWTEST_TEMP_DIR.'/test.png');
+        $this->assertTrue(true);
+    }
+
+    public function testShowMultiFixedFile()
+    {
+        $config = $this->getConfig();
+        $mo = new MatrixOperator;
+        $plt = new Plot($config,$mo);
+
+        $plt->plot($mo->arange(5));
+        $plt->figure();
+        $plt->plot($mo->arange(5));
+        $plt->show(RINDOWTEST_TEMP_DIR.'/test.png');
+        $this->assertTrue(true);
+    }
 }
-
-
-
-
-
-
-
-
-
-//
-
-
-/*
-'l'
-'_'
-'+'
-'x'
-'o'
-','
-'D'
-'1'
-'2'
-'3'
-'4'
-'*'
-'g'
-'|'
-'t'
-'s'
-'h'
-'^'
-'v'
-*/

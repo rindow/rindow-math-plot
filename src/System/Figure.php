@@ -4,6 +4,7 @@ namespace Rindow\Math\Plot\System;
 use InvalidArgumentException;
 use Rindow\Math\Plot\System\Configured;
 use Rindow\Math\Plot\System\Configure;
+use Rindow\Math\Plot\Artist\Mappable;
 
 class Figure
 {
@@ -14,6 +15,7 @@ class Figure
     protected $mo;
     protected $axes=[];
     protected $window;
+    protected $num;
 
     // configure
     protected $figsize = [640,480]; //  [width, height] in inches.
@@ -21,19 +23,22 @@ class Figure
     protected $bottomMargin = 55;
     protected $rightMargin = 64;
     protected $topMargin = 60;
-    protected $axesHSpacingRatio = 0.2;
-    protected $axesVSpacingRatio = 0.2;
+    protected $axesHSpacingRatio = 0.25;
+    protected $axesVSpacingRatio = 0.25;
     protected $bgColor = 'LightGray';
+    protected $colorbarWidth = 10;
 
     public function __construct(
+        $num,
         Configure $config, $renderer, $mo, $cmapManager,
         array $figsize=null)
     {
         $this->loadConfigure($config,
             ['figsize',
              'leftMargin','bottomMargin','rightMargin','topMargin',
-             'axesHSpacingRatio','axesVSpacingRatio','bgColor'],
+             'axesHSpacingRatio','axesVSpacingRatio','bgColor','colorbarWidth'],
             'figure');
+        $this->num = $num;
         $this->config = $config;
         $this->renderer = $renderer;
         $this->mo = $mo;
@@ -43,18 +48,23 @@ class Figure
         }
     }
 
+    public function num()
+    {
+        return $this->num;
+    }
+
     protected function newAxes($plotArea)
     {
         return new Axes($this->config,$this->renderer,$this->mo,
             $this->cmapManager,$plotArea);
     }
 
-    public function addAxes(Axes $axes)
+    public function addAxes(Axes $axes) : void
     {
         $this->axes[] = $axes;
     }
 
-    public function setAxes(array $axes)
+    public function setAxes(array $axes) : void
     {
         $this->axes = $axes;
     }
@@ -64,7 +74,7 @@ class Figure
         return $this->axes;
     }
 
-    public function getFigSize()
+    public function getFigSize() : array
     {
         return $this->figsize;
     }
@@ -117,6 +127,35 @@ class Figure
         $axes = $this->newAxes([$plotAreaLeft, $plotAreaBottom, $plotAreaWidth, $plotAreaHeight]);
         $this->addAxes($axes);
         return $axes;
+    }
+
+    public function colorbar(Mappable $mappable,Axes $ax,bool $absolute=null)
+    {
+        foreach ($this->axes as $axes) {
+            if($axes===$ax) {
+                return $this->doColorbar($mappable,$ax,$absolute);
+            }
+        }
+        throw new InvalidArgumentException('Target axes not found.');
+    }
+
+    protected function doColorbar(Mappable $mappable,Axes $ax,bool $absolute=null)
+    {
+        if(!$absolute) {
+            [$left, $bottom, $width, $height] = $ax->getPlotArea();
+            $newLeft = (int)floor($left+$width-($width/5)+$this->axesHSpacingRatio*($width/5));
+            $width = (int)floor($width*4/5);
+            $ax->setPlotArea([$left, $bottom, $width, $height]);
+            $ax = $this->newAxes([$newLeft, $bottom, $this->colorbarWidth, $height]);
+            $this->addAxes($ax);
+        }
+        $cmap = $mappable->colormap();
+        [$bottom,$top] = $mappable->colorRange();
+        $ax->colorbar($cmap,$bottom,$top);
+        $ax->hideXTicks(true);
+        $ax->setYTickPosition('right');
+        $ax->setDataAreaMargin(0);
+        return $ax;
     }
 
     public function draw()

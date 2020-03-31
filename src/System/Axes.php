@@ -3,6 +3,7 @@ namespace Rindow\Math\Plot\System;
 
 use ArrayObject;
 use Interop\Polite\Math\Matrix\NDArray;
+use Rindow\Math\Plot\Artist\DataArtist;
 use Rindow\Math\Plot\Artist\Line2D;
 use Rindow\Math\Plot\Artist\Marker;
 use Rindow\Math\Plot\Artist\Bar;
@@ -13,6 +14,7 @@ use Rindow\Math\Plot\Artist\XAxisLabel;
 use Rindow\Math\Plot\Artist\YAxisLabel;
 use Rindow\Math\Plot\Artist\Title;
 use Rindow\Math\Plot\Artist\Image;
+use Rindow\Math\Plot\Artist\Colorbar;
 use Rindow\Math\Plot\System\Configured;
 use Rindow\Math\Plot\System\Configure;
 
@@ -30,11 +32,15 @@ class Axes
     protected $scaling;
     protected $artists;
     protected $legend;
-    protected $axis;
+    protected $aspect;
     protected $xTicks;
     protected $xTickLabels;
     protected $yTicks;
     protected $yTickLabels;
+    protected $hideXTicks = false;
+    protected $hideYTicks = false;
+    protected $xTickPosition;
+    protected $yTickPosition;
     protected $xLabel;
     protected $yLabel;
     protected $title;
@@ -112,6 +118,16 @@ class Axes
         $this->scaling = $this->newScaling();
     }
 
+    public function getPlotArea() : array
+    {
+        return $this->plotArea;
+    }
+
+    public function setPlotArea(array $plotArea)
+    {
+        $this->plotArea = $plotArea;
+    }
+
     protected function newScaling()
     {
         return new Scaling();
@@ -125,7 +141,7 @@ class Axes
 
     protected function newLegend($handles,$labels)
     {
-        return new Legend($this->config,$this->renderer,$this->plotArea,
+        return new Legend($this->config,$this->renderer,
             $handles,$labels);
     }
 
@@ -171,10 +187,16 @@ class Axes
             $this->plotArea,$this->scaling);
     }
 
-    protected function newImage($data,$cmap)
+    protected function newImage($data,$cmap,$norm,$extent)
     {
         return new Image($this->config,$this->renderer,$this->mo,
-            $this->scaling,$data,$cmap);
+            $this->scaling,$data,$cmap,$norm,$extent);
+    }
+
+    protected function newColorbar($cmap,$bottom,$top)
+    {
+        return new Colorbar($this->config,$this->renderer,$this->mo,
+            $this->scaling,$cmap,$bottom,$top);
     }
 
     public function bar(
@@ -183,7 +205,7 @@ class Axes
         $width=null,
         $bottom=null,
         string $label=null,
-        string $style=null)
+        string $style=null) : array
     {
         if(is_array($x)) {
             $this->setXTickLabels(array_values($x));
@@ -270,7 +292,7 @@ class Axes
         $height=null,
         $left=null,
         string $label=null,
-        string $style=null)
+        string $style=null) : array
     {
         if(is_array($y)) {
             $this->setYTickLabels(array_values($y));
@@ -433,7 +455,7 @@ class Axes
 
     public function scatter(
         NDArray $x, NDArray $y, NDArray $size=null,
-        $color=null,string $marker=null,$label=null)
+        $color=null,string $marker=null,$label=null) : DataArtist
     {
         if($x->shape()!=$y->shape()) {
             throw new InvalidArgumentException('Shape of x and y must be same');
@@ -462,9 +484,9 @@ class Axes
     public function pie(
         NDArray $x,
         array $labels=null,
-        $startangle=null,
+        float $startangle=null,
         $autopct=null,
-        array $explodes=null)
+        array $explodes=null) : array
     {
         $count = $x->size();
         if($labels)
@@ -476,12 +498,23 @@ class Axes
             $startangle = 0;
         $start = $startangle;
         $start = $start % 360;
+        $artists = [];
         for($i=0;$i<$count;$i++) {
             $color = $this->defaultColors[$this->currentPlotColorNumber];
             $end = $start + $x[$i]/$sum*360;
             $label = isset($labels[$i]) ? $labels[$i] : null;
             $explode = isset($explodes[$i]) ? $explodes[$i] : null;
-            $pctText = $autopct ? sprintf($autopct,$x[$i]/$sum*100) : null;
+            if($autopct) {
+                if(is_string($autopct)) {
+                    $pctText = sprintf($autopct,$x[$i]/$sum*100);
+                } elseif(is_callable($autopct)) {
+                    $pctText = call_user_func($autopct,$x[$i]);
+                } else {
+                    throw new InvalidArgumentException('Argument "autopct" must be string or callable.');
+                }
+            } else {
+                $pctText = null;
+            }
             $artist = $this->newWedge([0,0],1,$start,$end,$color,$label,$pctText,$explode);
             $start = $end;
             if($start>=360)
@@ -494,102 +527,134 @@ class Axes
             }
         }
         $this->setFrame(false);
+        $this->setAspect('equal');
         return $artists;
     }
 
-    public function legend(array $handles=null,array $labels=null)
+    public function imshow(
+        NDArray $x,
+        string $cmap=null,
+        array $norm=null,
+        array $extent=null) : DataArtist
     {
-        if($handles==null) {
-            $handles = [];
+        if($cmap==null)
+            $cmap = 'viridis';
+        $cmap = $this->cmapManager->get($cmap);
+        $artist = $this->newImage($x,$cmap,$norm,$extent);
+        $this->artists->append($artist);
+        $this->setAspect('equal');
+        //$this->setDataAreaMargin(0);
+        return $artist;
+    }
+
+    public function colorbar($cmap, float $bottom, float $top) : DataArtist
+    {
+        $artist = $this->newColorbar($cmap,$bottom,$top);
+        $this->artists->append($artist);
+        return $artist;
+    }
+
+    public function legend(array $artists=null,array $labels=null)
+    {
+        if($artists==null) {
+            $artists = [];
             $labels = [];
             foreach ($this->artists as $handle) {
                 $label = $handle->getLabel();
                 if($label) {
-                    $handles[] = $handle;
+                    $artists[] = $handle;
                     $labels[] = $label;
                 }
             }
         } elseif($labels==null) {
-            $labels = array_values($handles);
-            $handles = $this->artists;
+            $labels = array_values($artists);
+            $artists = $this->artists->getArrayCopy();
         }
         foreach ($labels as $label) {
             if(!is_string($label)) {
                 throw new InvalidArgumentException('labels must be specified.');
             }
         }
-        $this->legend = $this->newLegend($handles,$labels);
+        $this->legend = $this->newLegend($artists,$labels);
         return $this->legend;
     }
 
-    public function imshow(NDArray $x, string $cmap=null)
+    public function setAspect($aspect) : void
     {
-        if($cmap==null)
-            $cmap = 'viridis';
-        $cmap = $this->cmapManager->get($cmap);
-        $artist = $this->newImage($x,$cmap);
-        $this->artists->append($artist);
-        //$this->setDataAreaMargin(0);
-        return $artist;
+        $this->aspect = $aspect;
     }
 
-
-    public function axis($axis)
-    {
-        $this->axis = $axis;
-    }
-
-    public function setXLabel($label)
+    public function setXLabel($label) : void
     {
         $this->xLabel = $label;
     }
 
-    public function setYLabel($label)
+    public function setYLabel($label) : void
     {
         $this->yLabel = $label;
     }
 
-    public function setTitle($title)
+    public function setTitle($title) : void
     {
         $this->title = $title;
     }
 
-    public function setXTicks(NDArray $ticks=null)
+    public function setXTicks(NDArray $ticks=null) : void
     {
         $this->xTicks = $ticks;
     }
 
-    public function setXTickLabels(array $labels=null)
+    public function setXTickLabels(array $labels=null) : void
     {
         $this->xTickLabels = $labels;
     }
 
-    public function setYTicks(NDArray $ticks=null)
+    public function setYTicks(NDArray $ticks=null) : void
     {
         $this->yTicks = $ticks;
     }
 
-    public function setYTickLabels(array $labels=null)
+    public function setYTickLabels(array $labels=null) : void
     {
         $this->yTickLabels = $labels;
     }
 
-    public function setFrame(bool $frame)
+    public function setFrame(bool $frame) : void
     {
         $this->frame = $frame;
     }
 
-    public function setXScale($type)
+    public function hideXTicks(bool $hidden) : void
+    {
+        $this->hideXTicks = $hidden;
+    }
+
+    public function hideYTicks(bool $hidden) : void
+    {
+        $this->hideYTicks = $hidden;
+    }
+
+    public function setXTickPosition(string $position) : void
+    {
+        $this->xTickPosition = $position;
+    }
+
+    public function setYTickPosition(string $position) : void
+    {
+        $this->yTickPosition = $position;
+    }
+
+    public function setXScale($type) : void
     {
         $this->scaling->setXScaleType($type);
     }
 
-    public function setYScale($type)
+    public function setYScale($type) : void
     {
         $this->scaling->setYScaleType($type);
     }
 
-    public function setDataAreaMargin($dataAreaMargin)
+    public function setDataAreaMargin(float $dataAreaMargin) : void
     {
         $this->dataAreaMargin = $dataAreaMargin;
     }
@@ -634,7 +699,7 @@ class Axes
         $dataLimit = $this->calcDataLimit();
 
         $this->scaling->calcScaling(
-            $this->plotArea,$dataLimit,$this->dataAreaMargin,$this->axis);
+            $this->plotArea,$dataLimit,$this->dataAreaMargin,$this->aspect);
 
         // plot frame
         if($this->frame) {
@@ -647,6 +712,26 @@ class Axes
                 $frame->setYTicks($this->yTicks);
             if($this->yTickLabels)
                 $frame->setYTickLabels($this->yTickLabels);
+            if($this->hideXTicks)
+                $frame->hideXTicks($this->hideXTicks);
+            if($this->hideYTicks)
+                $frame->hideYTicks($this->hideYTicks);
+            if($this->xTickPosition)
+                $frame->setXTickPosition($this->xTickPosition);
+            if($this->yTickPosition)
+                $frame->setYTickPosition($this->yTickPosition);
+            if($this->aspect=='equal') {
+                [$left, $bottom, $width, $height] = $this->plotArea;
+                if($width>$height) {
+                    $left += (int)(($width - $height)/2);
+                    $width = $height;
+                } elseif($width<$height) {
+                    $bottom += (int)(($height-$width)/2);
+                    $height = $width;
+                }
+                $frame->setPlotArea([$left, $bottom, $width, $height]);
+            }
+
             $frame->draw();
         }
 
@@ -664,7 +749,7 @@ class Axes
         }
 
         if($this->legend) {
-            $this->legend->calcAreas();
+            $this->legend->calcAreas($this->plotArea);
         }
         if($this->frame) {
             [$left,$bottom,$width,$height] = $this->plotArea;

@@ -2,12 +2,15 @@
 namespace Rindow\Math\Plot;
 
 use ArrayObject;
+use Interop\Polite\Math\Matrix\NDArray;
 use Rindow\Math\Matrix\MatrixOperator;
 use Rindow\Math\Plot\Renderer\GDDriver;
 use Rindow\Math\Plot\System\Figure;
 use Rindow\Math\Plot\System\Configure;
 use Rindow\Math\Plot\System\Configured;
 use Rindow\Math\Plot\System\CmapManager;
+use Rindow\Math\Plot\Artist\Mappable;
+use Rindow\Math\Plot\Artist\DataArtist;
 
 use InvalidArgumentException;
 
@@ -82,15 +85,22 @@ class Plot
 
     protected function newFigure($figsize)
     {
+        $this->currentFig++;
         $figure = new Figure(
+            $this->currentFig,
             $this->config,
             $this->getRenderer(),
             $this->mo,
             $this->getCmapManager(),
             $figsize);
-        $this->figures[] = $figure;
-        $this->currentFig++;
+        $this->figures[$this->currentFig] = $figure;
         return $figure;
+    }
+
+    protected function clearFigures()
+    {
+        $this->figures = [];
+        $this->currentFig = -1;
     }
 
     public function figure($num=null,array $figsize=null)
@@ -134,56 +144,86 @@ class Plot
         return $axes[$axesId];
     }
 
-    public function subplot($nRows=null,$nCols=null,$idx=null)
+    public function currentFigure()
     {
-        if(count($this->figures)==0)
+        if(count($this->figures)==0) {
             throw new InvalidArgumentException('no figure');
-            $figure = $this->figures[$this->currentFig];
+        }
+        return $this->figures[$this->currentFig];
+    }
+
+    public function subplot(int $nRows=null, int $nCols=null, int $idx=null)
+    {
+        $figure = $this->currentFigure();
         $axes = $figure->addSubPlot($nRows,$nCols,$idx);
         return $axes;
     }
 
-    public function bar($x,$height,$width=null,$bottom=null,$label=null,$style=null)
+    public function bar($x, NDArray $height,
+        $width=null, $bottom=null, string $label=null, string $style=null) : array
     {
         return $this->getAxes()->bar($x,$height,$width,$bottom,$label,$style);
     }
 
-    public function barh($y,$width,$height=null,$left=null,$label=null,$style=null)
+    public function barh($y, NDArray $width,
+        $height=null, $left=null, string $label=null, string $style=null) : array
     {
         return $this->getAxes()->barh($y,$width,$height,$left,$label,$style);
     }
 
-    public function plot($x,$y=null,$marker=null,$label=null)
+    public function plot(NDArray $x, NDArray $y=null,
+                        string $marker=null, string $label=null) : array
     {
         return $this->getAxes()->plot($x,$y,$marker,$label);
     }
 
-    public function scatter($x,$y,$size=null,$color=null,$marker=null,$label=null)
+    public function scatter(NDArray $x, NDArray $y, NDArray $size=null,
+                    $color=null, string $marker=null, $label=null) : DataArtist
     {
         return $this->getAxes()->scatter($x,$y,$size,$color,$marker,$label);
     }
 
-    public function pie($x,$labels=null,$startangle=null,$autopct=null,$explode=null)
+    public function pie(NDArray $x, array $labels=null,
+                    float $startangle=null, $autopct=null, array $explodes=null) : array
     {
         return $this->getAxes()->pie($x,$labels,$startangle,$autopct,$explode);
     }
 
-    public function legend(array $artists=null,array $titles=null)
+    public function imshow(NDArray $x, string $cmap=null,
+                                array $norm=null,array $extent=null) : DataArtist
     {
-        return $this->getAxes()->legend($artists,$titles);
+        return $this->getAxes()->imshow($x,$cmap,$norm,$extent);
     }
 
-    public function axis($axis)
+    public function colorbar(Mappable $mappable,$ax=null,bool $absolute=null)
     {
-        return $this->getAxes()->axis($axis);
+        $figure = $this->currentFigure();
+        if($ax===null) {
+            $ax = $this->getAxes();
+        }
+        return $figure->colorbar($mappable,$ax,$absolute);
     }
 
-    public function xLabel($label)
+    public function legend(array $artists=null,array $labels=null)
+    {
+        return $this->getAxes()->legend($artists,$labels);
+    }
+
+    public function axis($command)
+    {
+        if($command=='equal') {
+            return $this->getAxes()->setAspect('equal');
+        } else {
+            throw new InvalidArgumentException('Unknown command.');
+        }
+    }
+
+    public function xlabel($label)
     {
         return $this->getAxes()->setXLabel($label);
     }
 
-    public function yLabel($label)
+    public function ylabel($label)
     {
         return $this->getAxes()->setYLabel($label);
     }
@@ -193,11 +233,18 @@ class Plot
         return $this->getAxes()->setTitle($title);
     }
 
-    public function xticks($ticks,$labels)
+    public function xticks(NDArray $ticks,array $labels)
     {
         $axes = $this->getAxes();
         $axes->setXticks($ticks);
         $axes->setXtickLabels($labels);
+    }
+
+    public function yticks(NDArray $ticks,array $labels)
+    {
+        $axes = $this->getAxes();
+        $axes->setYticks($ticks);
+        $axes->setYtickLabels($labels);
     }
 
     public function xscale($type)
@@ -210,22 +257,25 @@ class Plot
         return $this->getAxes()->setYScale($type);
     }
 
-    public function imshow($x,$cmap=null)
-    {
-        return $this->getAxes()->imshow($x,$cmap);
-    }
-
     public function show(string $filename=null)
     {
         $renderer = $this->getRenderer();
         if(!$this->skipCleaning)
             $renderer->cleanUp();
-        foreach ($this->figures as $figure) {
+        $figcount = count($this->figures);
+        foreach ($this->figures as $n => $figure) {
             [$width,$height] = $figure->getFigSize();
             $renderer->open($width,$height);
             $figure->draw();
-            $renderer->show($filename);
+            if($filename===null || $figcount<2) {
+                $renderer->show($filename);
+            } else {
+                $pathinfo = pathinfo($filename);
+                $renderer->show($pathinfo['dirname'].'/'.
+                        $pathinfo['filename'].$n.'.'.$pathinfo['extension']);
+            }
             $renderer->close();
         }
+        $this->clearFigures();
     }
 }

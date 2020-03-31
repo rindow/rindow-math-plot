@@ -66,7 +66,7 @@ class Scaling
         array $plotArea,
         array $dataLimit,
         $dataAreaMargin,
-        $axis)
+        $aspect)
     {
         // scaling
         $this->plotArea = $plotArea;
@@ -85,7 +85,7 @@ class Scaling
             $maxY = log10($maxY);
         }
 
-        if($axis=='equal') {
+        if($aspect=='equal') {
             if($width>$height) {
                 $left += (int)(($width - $height)/2);
                 $width = $height;

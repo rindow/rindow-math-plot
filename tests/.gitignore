@@ -1,2 +1,4 @@
 cache/
 data/
+tmp/
+.phpunit.result.cache

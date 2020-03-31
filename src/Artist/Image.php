@@ -5,21 +5,24 @@ use Interop\Polite\Math\Matrix\NDArray;
 use Rindow\Math\Plot\System\Configured;
 use Rindow\Math\Plot\System\Configure;
 use InvalidArgumentException;
+use RuntimeException;
 
-class Image implements DataArtist
+class Image implements DataArtist,Mappable
 {
     protected $config;
     protected $renderer;
     protected $mo;
     protected $scaling;
     protected $data;
-    protected $norm = true;
+    protected $cmap;
+    protected $norm;
+    protected $extent;
 
     public function __construct(
         Configure $config, $renderer, $mo, $scaling,
-        NDArray $data,$cmap)
+        NDArray $data,$cmap,array $norm=null,array $extent=null)
     {
-        if($data->ndim()<2 && $data->ndim()>3)
+        if($data->ndim()<2 || $data->ndim()>3)
             throw new InvalidArgumentException('image data must be 2-D or 3-D shape NDArray.');
         if($data->ndim()==3) {
             $shape = $data->shape();
@@ -33,15 +36,26 @@ class Image implements DataArtist
         $this->scaling = $scaling;
         $this->data = $data;
         $this->cmap = $cmap;
+        $this->norm = $norm;
+        $this->extent = $extent;
     }
 
     public function calcDataLimit() : array
     {
-        $shape = $this->data->shape();
-        $minX = -0.5;
-        $minY = -0.5;
-        $maxX = $shape[1]-0.5;
-        $maxY = $shape[0]-0.5;
+        if($this->extent===null) {
+            $shape = $this->data->shape();
+            $minX = -0.5;
+            $minY = -0.5;
+            $maxX = $shape[1]-0.5;
+            $maxY = $shape[0]-0.5;
+        } else {
+            if(count($this->extent)!=4) {
+                throw new RuntimeException('Extent must be [xmin,xmax,ymin,ymax].');
+            }
+            // *** CAUTION ***
+            // matplotlib compatible
+            [$minX,$maxX,$minY,$maxY] = $this->extent;
+        }
         return [$minX,$minY,$maxX,$maxY];
     }
 
@@ -69,6 +83,31 @@ class Image implements DataArtist
         }
     }
 
+    public function colormap()
+    {
+        return $this->cmap;
+    }
+
+    public function colorRange() : array
+    {
+        if($this->data->ndim()!=2) {
+            throw new RuntimeException('Does not support color maps.');
+        }
+        if($this->norm===null) {
+            $minC = $this->mo->min($this->data);
+            $maxC = $this->mo->max($this->data);
+        } else {
+            if(count($this->norm)!=2) {
+                throw new RuntimeException('Normalize must be [minimum,maximum].');
+            }
+            [$minC,$maxC] = $this->norm;
+            if($minC>$maxC) {
+                [$minC,$maxC] = [$maxC,$minC];
+            }
+        }
+        return [$minC,$maxC];
+    }
+
     public function draw(OverlapChecker $checkOverlap=null)
     {
         $shape = $this->data->shape();
@@ -81,8 +120,7 @@ class Image implements DataArtist
                 $colorMode = 'rgba';
         } else {
             $colorMode = 'cmap';
-            $minC = - $this->mo->min($this->data);
-            $maxC = $this->mo->max($this->data);
+            [$minC,$maxC] = $this->colorRange();
             if($minC==$maxC) {
                 $scaleC = 0;
             } else {
@@ -90,16 +128,23 @@ class Image implements DataArtist
             }
             $offsetC = - $minC;
         }
+        if($this->extent===null) {
+            $deltaX = 1;
+            $deltaY = 1;
+            $minY = -0.5;
+            $minX = -0.5;
+        } else {
+            [$minX,$minY,$maxX,$maxY] = $this->calcDataLimit();
+            $deltaX = ($maxX-$minX)/$xCount;
+            $deltaY = ($maxY-$minY)/$yCount;
+        }
         for($m=0;$m<$yCount;$m++) {
-            $py1 = $this->scaling->py($m-0.5);
-            $py2 = $this->scaling->py($m+0.5);
-            for($n=0;$n<$yCount;$n++) {
+            $py1 = $this->scaling->py($minY+$m*$deltaY);
+            $py2 = $this->scaling->py($minY+($m+1)*$deltaY);
+            for($n=0;$n<$xCount;$n++) {
                 $value = $this->data[$m][$n];
                 if($colorMode=='cmap') {
-                    if($this->norm) {
-                        $value = $scaleC*($value+$offsetC);
-//echo '('.$value.')';
-                    }
+                    $value = $scaleC*$value+$scaleC*$offsetC;
                     $color = $this->cmap->sRGB24Bit($this->cmap->interpolateOrClip($value));
                 } else {
                     $r = $value[0];
@@ -115,10 +160,11 @@ class Image implements DataArtist
                         $color = ($colorMode=='rgba') ? [$r,$g,$b,$a] : [$r,$g,$b];
                     }
                 }
-//echo '('.implode(',',$color).')';
                 $color = $this->renderer->allocateColor($color);
-                $px1 = $this->scaling->px($n-0.5);
-                $px2 = $this->scaling->px($n+0.5);
+                #$px1 = $this->scaling->px($n-0.5);
+                #$px2 = $this->scaling->px($n+0.5);
+                $px1 = $this->scaling->px($minX+$n*$deltaX);
+                $px2 = $this->scaling->px($minX+($n+1)*$deltaX);
                 $this->renderer->filledrectangle($px1,$py1,$px2,$py2,$color);
             }
         }

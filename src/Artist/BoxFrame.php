@@ -19,6 +19,9 @@ class BoxFrame
     protected $xTickLabels;                       // array text of x ticks
     protected $yTicks;                            // ndarray of y ticks
     protected $yTickLabels;                       // array text of y ticks
+    protected $hideXTicks = false;
+    protected $hideYTicks = false;
+    protected $axis;
 
     // configure
 
@@ -45,7 +48,7 @@ class BoxFrame
     protected $tickLabelStandardCount = 6;
     protected $tickLabelWidth = 6;
     protected $tickLabelHeight = 4;
-
+    protected $framePadding = 1;
     //Fonts
     protected $xTickLabelFontSize = 4;
     protected $yTickLabelFontSize = 4;
@@ -60,7 +63,7 @@ class BoxFrame
                 'xTickPosition','yTickPosition','xTickLength','yTickLength',
                 'xTickLabelMargin','yTickLabelMargin','xTickLabelAngle','yTickLabelAngle',
                 'tickLabelStandardCount','tickLabelWidth','tickLabelHeight',
-                'xTickLabelFontSize','yTickLabelFontSize',
+                'xTickLabelFontSize','yTickLabelFontSize','framePadding',
             ],
             'frame');
         $this->renderer = $renderer;
@@ -88,6 +91,36 @@ class BoxFrame
         $this->yTickLabels = $labels;
     }
 
+    public function hideXTicks(bool $hide)
+    {
+        $this->hideXTicks = $hide;
+    }
+
+    public function hideYTicks(bool $hide)
+    {
+        $this->hideYTicks = $hide;
+    }
+
+    public function setAxis($axis)
+    {
+        $this->axis = $axis;
+    }
+
+    public function setXTickPosition(string $position)
+    {
+        $this->xTickPosition = $position;
+    }
+
+    public function setYTickPosition(string $position)
+    {
+        $this->yTickPosition = $position;
+    }
+
+    public function setPlotArea($plotArea)
+    {
+        $this->plotArea = $plotArea;
+    }
+
     public function draw()
     {
         //$this->renderer->rectangle($left,$bottom,$left+$width-1,$bottom+$height-1);
@@ -96,7 +129,10 @@ class BoxFrame
 
         [$left, $bottom, $width, $height] = $this->plotArea;
         $this->renderer->rectangle(
-            $left,$bottom,$left+$width,$bottom+$height,$dvTickColor);
+            $left-$this->framePadding,
+            $bottom-$this->framePadding,
+            $left+$width+$this->framePadding,
+            $bottom+$height+$this->framePadding,$dvTickColor);
 
         $this->scaling->setTickLabelInfo([
             $this->xTickLabelAngle,
@@ -106,17 +142,20 @@ class BoxFrame
             $this->tickLabelHeight,
         ]);
 
-        $this->drawXTicks($dvTickColor,$dvTextColor);
-        $this->drawYTicks($dvTickColor,$dvTextColor);
+        if(!$this->hideXTicks) {
+            $this->drawXTicks($dvTickColor,$dvTextColor);
+        }
+        if(!$this->hideYTicks) {
+            $this->drawYTicks($dvTickColor,$dvTextColor);
+        }
     }
 
     protected function drawXTicks($dvTickColor,$dvTextColor)
     {
         [$left, $bottom, $width, $height] = $this->plotArea;
-
         $font = $this->renderer->allocateFont($this->xTickLabelFontSize);
         $scaleType = $this->scaling->xscale();
-        $axis = ($scaleType=='log') ? 'logx' : 'x';
+        $format = ($scaleType=='log') ? 'logx' : 'x';
         [$py1, $py2, $pty, $halign, $valign, $pyh] = $this->calcXTick();
 
         if($this->xTicks) {
@@ -124,11 +163,11 @@ class BoxFrame
             $count = $this->xTicks->size();
             for($i=0;$i<$count;$i++) {
                 if($this->xTickLabels) {
-                    $x = $i;
+                    $x = $this->xTicks[$i];
                     $label = $this->xTickLabels[$i];
                 } else {
                     $x = $this->xTicks[$i];
-                    $label = $this->formatLabel($axis, $x, $scaleType);
+                    $label = $this->formatLabel($format, $x, $scaleType);
                 }
                 if($scaleType=='log') {
                     $x = 10**$x;
@@ -150,7 +189,7 @@ class BoxFrame
             $endLog = 10**$end;
         }
         while ($x <= $end) {
-            $label = $this->formatLabel($axis, $x, $scaleType);
+            $label = $this->formatLabel($format, $x, $scaleType);
             if($scaleType=='log') {
                 $x = 10**$x;
             }
@@ -178,7 +217,7 @@ class BoxFrame
         [$left, $bottom, $width, $height] = $this->plotArea;
 
         if($this->xTickPosition == 'down') {
-            $py1 = $bottom;
+            $py1 = $bottom - $this->framePadding;
             $py2 = $py1 - $this->xTickLength;
             $pty = $py2 - $this->xTickLabelMargin;
             $pyh = $py1 - (int)($this->xTickLength/2);
@@ -188,7 +227,7 @@ class BoxFrame
                 $halign = 'right'; $valign = 'center';
             }
         } elseif($this->xTickPosition == 'up') {
-            $py1 = $bottom + $height;
+            $py1 = $bottom + $height + $this->framePadding;
             $py2 = $py1 + $this->xTickLength;
             $pty = $py2 + $this->xTickLabelMargin;
             $pyh = $py1 + (int)($this->xTickLength/2);
@@ -239,7 +278,7 @@ class BoxFrame
 
         $font = $this->renderer->allocateFont($this->yTickLabelFontSize);
         $scaleType = $this->scaling->yscale();
-        $axis = ($scaleType=='log') ? 'logy' : 'y';
+        $format = ($scaleType=='log') ? 'logy' : 'y';
         [$px1, $px2, $ptx, $halign, $valign, $pxh] = $this->calcYTick();
 
         if($this->yTicks) {
@@ -247,11 +286,11 @@ class BoxFrame
             $count = $this->yTicks->size();
             for($i=0;$i<$count;$i++) {
                 if($this->yTickLabels) {
-                    $y = $i;
+                    $y = $this->yTicks[$i];
                     $label = $this->yTickLabels[$i];
                 } else {
                     $y = $this->yTicks[$i];
-                    $label = $this->formatLabel($axis, $y, $scaleType);
+                    $label = $this->formatLabel($format, $y, $scaleType);
                 }
                 $py = $this->scaling->py($y);
                 $this->renderer->line($px1, $py, $px2, $py, $dvTickColor);
@@ -270,7 +309,7 @@ class BoxFrame
         $n = 0;
         $y = $start;
         while ($y <= $end) {
-            $label = $this->formatLabel($axis, $y, $scaleType);
+            $label = $this->formatLabel($format, $y, $scaleType);
             if($scaleType=='log') {
                 $y = 10**$y;
             }
@@ -297,7 +336,7 @@ class BoxFrame
         [$left, $bottom, $width, $height] = $this->plotArea;
 
         if($this->yTickPosition == 'left') {
-            $px1 = $left;
+            $px1 = $left - $this->framePadding;
             $px2 = $px1 - $this->yTickLength;
             $ptx = $px2 - $this->yTickLabelMargin;
             $pxh = $px1 - (int)($this->yTickLength/2);
@@ -307,7 +346,7 @@ class BoxFrame
                 $halign = 'center'; $valign = 'bottom';
             }
         } elseif($this->yTickPosition == 'right') {
-            $px1 = $left + $width;
+            $px1 = $left + $width + $this->framePadding;
             $px2 = $px1 + $this->yTickLength;
             $ptx = $px2 + $this->yTickLabelMargin;
             $pxh = $px1 + (int)($this->yTickLength/2);
