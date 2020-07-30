@@ -116,7 +116,7 @@ class Image implements DataArtist,Mappable
         $dtype = $this->stringType($this->data->dtype());
         if(isset($shape[2])) {
             $colorMode = 'rgb';
-            if($shape[3]==4)
+            if($shape[2]==4)
                 $colorMode = 'rgba';
         } else {
             $colorMode = 'cmap';
@@ -150,7 +150,7 @@ class Image implements DataArtist,Mappable
                     $r = $value[0];
                     $g = $value[1];
                     $b = $value[2];
-                    $a = ($colorMode=='rgba') ? $value[4] : 0;
+                    $a = ($colorMode=='rgba') ? $value[3] : 0;
                     if($dtype=='float') {
                         $color = $this->cmap->sRGB24Bit([$r,$g,$b]);
                         if($colorMode=='rgba') {
