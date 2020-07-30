@@ -187,10 +187,10 @@ class Axes
             $this->plotArea,$this->scaling);
     }
 
-    protected function newImage($data,$cmap,$norm,$extent)
+    protected function newImage($data,$cmap,$norm,$extent,$origin)
     {
         return new Image($this->config,$this->renderer,$this->mo,
-            $this->scaling,$data,$cmap,$norm,$extent);
+            $this->scaling,$data,$cmap,$norm,$extent,$origin);
     }
 
     protected function newColorbar($cmap,$bottom,$top)
@@ -535,12 +535,13 @@ class Axes
         NDArray $x,
         string $cmap=null,
         array $norm=null,
-        array $extent=null) : DataArtist
+        array $extent=null,
+        string $origin=null) : DataArtist
     {
         if($cmap==null)
             $cmap = 'viridis';
         $cmap = $this->cmapManager->get($cmap);
-        $artist = $this->newImage($x,$cmap,$norm,$extent);
+        $artist = $this->newImage($x,$cmap,$norm,$extent,$origin);
         $this->artists->append($artist);
         $this->setAspect('equal');
         //$this->setDataAreaMargin(0);

@@ -189,10 +189,14 @@ class Plot
         return $this->getAxes()->pie($x,$labels,$startangle,$autopct,$explode);
     }
 
-    public function imshow(NDArray $x, string $cmap=null,
-                                array $norm=null,array $extent=null) : DataArtist
+    public function imshow(
+        NDArray $x,
+        string $cmap=null,
+        array $norm=null,
+        array $extent=null,
+        string $origin=null) : DataArtist
     {
-        return $this->getAxes()->imshow($x,$cmap,$norm,$extent);
+        return $this->getAxes()->imshow($x,$cmap,$norm,$extent,$origin);
     }
 
     public function colorbar(Mappable $mappable,$ax=null,bool $absolute=null)

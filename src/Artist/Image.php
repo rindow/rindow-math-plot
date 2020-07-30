@@ -17,10 +17,14 @@ class Image implements DataArtist,Mappable
     protected $cmap;
     protected $norm;
     protected $extent;
+    protected $originUpper;
 
     public function __construct(
         Configure $config, $renderer, $mo, $scaling,
-        NDArray $data,$cmap,array $norm=null,array $extent=null)
+        NDArray $data,$cmap,
+        array $norm=null,
+        array $extent=null,
+        string $origin=null)
     {
         if($data->ndim()<2 || $data->ndim()>3)
             throw new InvalidArgumentException('image data must be 2-D or 3-D shape NDArray.');
@@ -38,6 +42,7 @@ class Image implements DataArtist,Mappable
         $this->cmap = $cmap;
         $this->norm = $norm;
         $this->extent = $extent;
+        $this->originUpper = ($origin=='upper')? true : false ;
     }
 
     public function calcDataLimit() : array
@@ -133,14 +138,21 @@ class Image implements DataArtist,Mappable
             $deltaY = 1;
             $minY = -0.5;
             $minX = -0.5;
+            $maxY = $yCount+0.5;
+            $maxX = $xCount+0.5;
         } else {
             [$minX,$minY,$maxX,$maxY] = $this->calcDataLimit();
             $deltaX = ($maxX-$minX)/$xCount;
             $deltaY = ($maxY-$minY)/$yCount;
         }
         for($m=0;$m<$yCount;$m++) {
-            $py1 = $this->scaling->py($minY+$m*$deltaY);
-            $py2 = $this->scaling->py($minY+($m+1)*$deltaY);
+            if(!$this->originUpper){
+                $py1 = $this->scaling->py($minY+$m*$deltaY);
+                $py2 = $this->scaling->py($minY+($m+1)*$deltaY);
+            } else {
+                $py1 = $this->scaling->py($maxY-$m*$deltaY);
+                $py2 = $this->scaling->py($maxY-($m+1)*$deltaY);
+            }
             for($n=0;$n<$xCount;$n++) {
                 $value = $this->data[$m][$n];
                 if($colorMode=='cmap') {
