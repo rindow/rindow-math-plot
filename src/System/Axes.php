@@ -84,7 +84,7 @@ class Axes
         'g' => 'green',
         'r' => 'red',
         'c' => 'cyan',
-        'm' => 'cyan',
+        'm' => 'magenta',
         'y' => 'yellow',
         'k' => 'black',
         'w' => 'white',
@@ -414,8 +414,13 @@ class Axes
         }
         $markerString = $this->generateMarkerString($marker);
         $lineStyleString = $this->generateLineStyleString($marker);
+        $markerColor = $this->generateMarkerColor($marker);
         for($i=0,$j=0; $i<$count && $j<$count; $i+=$incY,$j+=$incX) {
-            $color = $this->defaultColors[$this->currentPlotColorNumber];
+            if($markerColor!==null) {
+                $color = $markerColor;
+            } else {
+                $color = $this->defaultColors[$this->currentPlotColorNumber];
+            }
             $artist = $this->newLine2D($x[$j],$y[$i],$markerString,$lineStyleString,$label,$color);
             $this->artists->append($artist);
             $artists[] = $artist;
@@ -448,6 +453,20 @@ class Axes
         foreach($this->lineStyleCharactor as $key => $value) {
             if(strpos($marker,$key)!==false) {
                 return $value;
+            }
+        }
+        return null;
+    }
+
+    protected function generateMarkerColor(string $marker=null)
+    {
+        if($marker===null)
+            return null;
+        $count = strlen($marker);
+        for($i=0;$i<$count;$i++) {
+            $c = $marker[$i];
+            if(isset($this->colorCharactor[$c])) {
+                return $this->colorCharactor[$c];
             }
         }
         return null;
