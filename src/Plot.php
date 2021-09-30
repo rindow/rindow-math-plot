@@ -37,13 +37,19 @@ class Plot
             $this->setCmapManager($cmapManager);
     }
 
+    protected function newConfig(array $config=null)
+    {
+        if($config) {
+            $config = new Configure($config);
+        } else {
+            $config = new Configure();
+        }
+        return $config;
+    }
+
     public function setConfig(array $config=null)
     {
-        if($config)
-            $this->config = new Configure($config);
-        else {
-            $this->config = new Configure();
-        }
+        $this->config = $this->newConfig($config);
         $this->loadConfigure($this->config,
             ['renderer.skipCleaning','renderer.skipRunViewer']);
     }
@@ -83,12 +89,17 @@ class Plot
         return $this->cmapManager;
     }
 
-    protected function newFigure($figsize)
+    protected function newFigure($figsize,$config=null)
     {
+        if($config===null) {
+            $config = $this->config;
+        } else {
+            $config = $this->newConfig($config);
+        }
         $this->currentFig++;
         $figure = new Figure(
             $this->currentFig,
-            $this->config,
+            $config,
             $this->getRenderer(),
             $this->mo,
             $this->getCmapManager(),
@@ -103,7 +114,7 @@ class Plot
         $this->currentFig = -1;
     }
 
-    public function figure($num=null,array $figsize=null)
+    public function figure($num=null,array $figsize=null,array $config=null)
     {
         if(is_int($num)) {
             if(isset($this->figures[$num])) {
@@ -111,16 +122,16 @@ class Plot
             }
             $figure = $this->figures[$num];
         } elseif($num==null||is_string($num)) {
-            $figure = $this->newFigure($figsize);
+            $figure = $this->newFigure($figsize,$config);
         } else {
             throw new InvalidArgumentException('First argument must be integer or string');
         }
         return $figure;
     }
 
-    public function subplots(int $nRows=1,int $nCols=1,array $figsize=null) : array
+    public function subplots(int $nRows=1,int $nCols=1,array $figsize=null,array $config=null) : array
     {
-        $figure = $this->newFigure($figsize);
+        $figure = $this->newFigure($figsize,$config);
         $n = $nRows*$nCols;
         $axes = [];
         for($i=0;$i<$n;$i++) {

@@ -150,8 +150,8 @@ class Image implements DataArtist,Mappable
                 $py1 = $this->scaling->py($minY+$m*$deltaY);
                 $py2 = $this->scaling->py($minY+($m+1)*$deltaY);
             } else {
-                $py1 = $this->scaling->py($maxY-$m*$deltaY);
-                $py2 = $this->scaling->py($maxY-($m+1)*$deltaY);
+                $py1 = $this->scaling->py($maxY-($m+1)*$deltaY);
+                $py2 = $this->scaling->py($maxY-($m+2)*$deltaY);
             }
             for($n=0;$n<$xCount;$n++) {
                 $value = $this->data[$m][$n];
