@@ -35,7 +35,7 @@ class GDDriver
             $this->setImageContext($image);
         }
         if($filename==null) {
-            $filename = sys_get_temp_dir().'/rindowplot';
+            $filename = sys_get_temp_dir().'/rindow/mathplot';
         }
         if($skipRunViewer!==null) {
             $this->skipRunViewer = $skipRunViewer;

@@ -74,6 +74,8 @@ abstract class AbstractAxisLabel
             default:
                 throw new LogicException('invalid axis label position: '.$this->position);
         }
+        $xpos = (int)floor($xpos);
+        $ypos = (int)floor($ypos);
         $this->renderer->text($font, $xpos, $ypos, $this->text,
                          $color, $this->rotate, $halign, $valign);
     }
