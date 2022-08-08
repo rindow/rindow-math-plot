@@ -478,4 +478,16 @@ class Test extends TestCase
         $plt->show(RINDOWTEST_TEMP_DIR.'/test.png');
         $this->assertTrue(true);
     }
+
+    public function testMarkerPolygon()
+    {
+        $config = $this->getConfig();
+        $mo = new MatrixOperator;
+        $plt = new Plot($config,$mo);
+
+        $sizes = $mo->array([100,200,300,400,500]);
+        $plt->scatter($mo->arange(5),$mo->arange(5),$sizes,$color=null,$marker='D');
+        $plt->show();
+        $this->assertTrue(true);
+    }
 }

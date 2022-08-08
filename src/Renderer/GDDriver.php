@@ -20,6 +20,7 @@ class GDDriver
     protected $viewer = 'RINDOW_MATH_PLOT_VIEWER';
     protected $skipRunViewer = false;
     protected $mkdir = false;
+    protected $php80 = false;
 
     public function __construct(
         bool $bottomOrigin=null,
@@ -28,6 +29,7 @@ class GDDriver
         bool $skipCleaning=null,
         bool $skipRunViewer=null)
     {
+        $this->php80 = (version_compare(phpversion(),'8.1.0')<0);
         if($bottomOrigin !== null) {
             $this->bottomOrigin = $bottomOrigin;
         }
@@ -211,9 +213,15 @@ class GDDriver
             $color = $this->color;
         $count = count($points);
         $points = $this->phypoints($points);
-        imagefilledpolygon($this->image,
+        if($this->php80) {
+            imagefilledpolygon($this->image,
             $points, $count,
             $color);
+        } else {
+            imagefilledpolygon($this->image,
+            $points,
+            $color);
+        }
     }
 
     public function polygon(array $points, $color=null)
@@ -222,9 +230,15 @@ class GDDriver
             $color = $this->color;
         $count = count($points);
         $points = $this->phypoints($points);
-        imagepolygon($this->image,
+        if($this->php80) {
+            imagepolygon($this->image,
             $points, $count,
             $color);
+        } else {
+            imagepolygon($this->image,
+            $points,
+            $color);
+        }
     }
 
     public function allocateColor($color)
