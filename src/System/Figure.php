@@ -16,6 +16,7 @@ class Figure
     protected $axes=[];
     protected $window;
     protected $num;
+    protected $cmapManager;
 
     // configure
     protected $figsize = [640,480]; //  [width, height] in inches.

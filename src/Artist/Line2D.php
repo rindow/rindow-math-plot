@@ -14,6 +14,7 @@ class Line2D implements DataArtist
     protected $scaling;
     protected $x;
     protected $y;
+    protected $count;
     protected $marker;
     protected $style;
     protected $label;

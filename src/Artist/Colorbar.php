@@ -14,6 +14,7 @@ class Colorbar implements DataArtist
     protected $scaling;
     protected $bottom;
     protected $top;
+    protected $cmap;
 
     public function __construct(
         Configure $config, $renderer, $mo, $scaling,

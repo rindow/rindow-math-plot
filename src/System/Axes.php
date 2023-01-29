@@ -45,6 +45,7 @@ class Axes
     protected $yLabel;
     protected $title;
     protected $currentPlotColorNumber = 0;
+    protected $cmapManager;
 
     protected $defaultColors = [       // The default colors for data and error bars
         'RoyalBlue', 'orange', 'SeaGreen', 'red', 'purple', 'brown', 'salmon', 'SlateGray',

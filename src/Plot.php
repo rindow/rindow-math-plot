@@ -26,6 +26,7 @@ class Plot
     protected $currentFig = -1;
     protected $skipCleaning = false;
     protected $skipRunViewer;
+    protected $execBackground;
 
     public function __construct(array $config=null,$matrixOperator=null,$renderer=null,$cmapManager=null)
     {
@@ -51,7 +52,7 @@ class Plot
     {
         $this->config = $this->newConfig($config);
         $this->loadConfigure($this->config,
-            ['renderer.skipCleaning','renderer.skipRunViewer']);
+            ['renderer.skipCleaning','renderer.skipRunViewer','renderer.execBackground']);
     }
 
     public function setMatrixOperator($matrixOperator=null)
@@ -71,7 +72,7 @@ class Plot
     {
         if($this->renderer==null) {
             $this->renderer = new GDDriver(true,null,null,
-                                    $this->skipCleaning,$this->skipRunViewer);
+                                    $this->skipCleaning,$this->skipRunViewer,$this->execBackground);
         }
         return $this->renderer;
     }
