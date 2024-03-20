@@ -1,5 +1,5 @@
 <?php
-namespace RindowTest\NeuralNetworks\Model\ModelLoaderTest;
+namespace RindowTest\NeuralNetworks\Model\PlotTest;
 
 use PHPUnit\Framework\TestCase;
 use Rindow\Math\Matrix\MatrixOperator;
@@ -8,13 +8,13 @@ use Rindow\Math\Plot\Renderer\GDDriver;
 use Interop\Polite\Math\Matrix\NDArray;
 use RuntimeException;
 
-class Test extends TestCase
+class PlotTest extends TestCase
 {
     public function getConfig()
     {
         return [
             'renderer.skipCleaning' => true,
-            'renderer.skipRunViewer' => getenv('TRAVIS_PHP_VERSION') ? true : false,
+            'renderer.skipRunViewer' => getenv('PLOT_RENDERER_SKIP') ? true : false,
             //'title.fontSize' => 4,
             //'wedge.pctColor' => 'white',
             //'bar.barWidth' => 0.5,
