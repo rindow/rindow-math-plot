@@ -22,9 +22,9 @@ class Image implements DataArtist,Mappable
     public function __construct(
         Configure $config, $renderer, $mo, $scaling,
         NDArray $data,$cmap,
-        array $norm=null,
-        array $extent=null,
-        string $origin=null)
+        ?array $norm=null,
+        ?array $extent=null,
+        ?string $origin=null)
     {
         if($data->ndim()<2 || $data->ndim()>3)
             throw new InvalidArgumentException('image data must be 2-D or 3-D shape NDArray.');
@@ -113,7 +113,7 @@ class Image implements DataArtist,Mappable
         return [$minC,$maxC];
     }
 
-    public function draw(OverlapChecker $checkOverlap=null)
+    public function draw(?OverlapChecker $checkOverlap=null)
     {
         $shape = $this->data->shape();
         $yCount = $shape[0];

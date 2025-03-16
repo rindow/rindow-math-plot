@@ -32,7 +32,7 @@ class Figure
     public function __construct(
         $num,
         Configure $config, $renderer, $mo, $cmapManager,
-        array $figsize=null)
+        ?array $figsize=null)
     {
         $this->loadConfigure($config,
             ['figsize',
@@ -92,8 +92,8 @@ class Figure
     }
 
     public function addSubPlot(
-        int $nRows=null, int $nCols=null, int $index=null,
-        int $rowspan=null, int $colspan=null)
+        ?int $nRows=null, ?int $nCols=null, ?int $index=null,
+        ?int $rowspan=null, ?int $colspan=null)
     {
         if($nRows===null)
             $nRows=1;
@@ -130,7 +130,7 @@ class Figure
         return $axes;
     }
 
-    public function colorbar(Mappable $mappable,Axes $ax,bool $absolute=null)
+    public function colorbar(Mappable $mappable,Axes $ax,?bool $absolute=null)
     {
         foreach ($this->axes as $axes) {
             if($axes===$ax) {
@@ -140,7 +140,7 @@ class Figure
         throw new InvalidArgumentException('Target axes not found.');
     }
 
-    protected function doColorbar(Mappable $mappable,Axes $ax,bool $absolute=null)
+    protected function doColorbar(Mappable $mappable,Axes $ax,?bool $absolute=null)
     {
         if(!$absolute) {
             [$left, $bottom, $width, $height] = $ax->getPlotArea();

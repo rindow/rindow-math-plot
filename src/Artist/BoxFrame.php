@@ -71,22 +71,22 @@ class BoxFrame
         $this->scaling  = $scaling;
     }
 
-    public function setXTicks(NDArray $ticks=null)
+    public function setXTicks(?NDArray $ticks=null)
     {
         $this->xTicks = $ticks;
     }
 
-    public function setXTickLabels(array $labels=null)
+    public function setXTickLabels(?array $labels=null)
     {
         $this->xTickLabels = $labels;
     }
 
-    public function setYTicks(NDArray $ticks=null)
+    public function setYTicks(?NDArray $ticks=null)
     {
         $this->yTicks = $ticks;
     }
 
-    public function setYTickLabels(array $labels=null)
+    public function setYTickLabels(?array $labels=null)
     {
         $this->yTickLabels = $labels;
     }

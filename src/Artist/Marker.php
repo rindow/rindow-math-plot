@@ -23,8 +23,8 @@ class Marker implements DataArtist
     protected $markerStyle = 'dot';
 
     public function __construct(
-        Configure $config=null, $renderer=null, $mo=null, $scaling=null,
-        NDArray $x=null,NDArray $y=null,NDArray $size=null,
+        ?Configure $config=null, $renderer=null, $mo=null, $scaling=null,
+        ?NDArray $x=null,?NDArray $y=null,?NDArray $size=null,
         $color=null,$marker=null,$label=null)
     {
         if($config) {
@@ -54,7 +54,7 @@ class Marker implements DataArtist
         return [$minX,$minY,$maxX,$maxY];
     }
 
-    public function draw(OverlapChecker $checkOverlap=null)
+    public function draw(?OverlapChecker $checkOverlap=null)
     {
         //[$scaleX,$offsetX,$scaleY,$offsetY] = $scaling;
         $color = $this->renderer->allocateColor($this->color);

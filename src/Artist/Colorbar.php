@@ -47,7 +47,7 @@ class Colorbar implements DataArtist
         return [$minX,$minY,$maxX,$maxY];
     }
 
-    public function draw(OverlapChecker $checkOverlap=null)
+    public function draw(?OverlapChecker $checkOverlap=null)
     {
         $n = 256;
         $px1 = $this->scaling->px(0.0);

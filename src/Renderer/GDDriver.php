@@ -25,12 +25,12 @@ class GDDriver
     protected $php80 = false;
 
     public function __construct(
-        bool $bottomOrigin=null,
+        ?bool $bottomOrigin=null,
         $image=null,
-        string $filename=null,
-        bool $skipCleaning=null,
-        bool $skipRunViewer=null,
-        bool $execBackground=null)
+        ?string $filename=null,
+        ?bool $skipCleaning=null,
+        ?bool $skipRunViewer=null,
+        ?bool $execBackground=null)
     {
         $this->php80 = (version_compare(phpversion(),'8.1.0')<0);
         if($bottomOrigin !== null) {
@@ -139,7 +139,7 @@ class GDDriver
             $color);
     }
 
-    public function line($x1, $y1, $x2, $y2, $color=null, string $style=null)
+    public function line($x1, $y1, $x2, $y2, $color=null, ?string $style=null)
     {
         if($color===null) {
             $color = $this->color;
@@ -275,14 +275,14 @@ class GDDriver
     }
 
     public function text(GDFont $font, int $xpos, int $ypos, string $text, $color,
-            $angle=null, string $halign=null, string $valign=null)
+            $angle=null, ?string $halign=null, ?string $valign=null)
     {
         return $this->textDriver->text($font, $xpos, $ypos, $text, $color,
                 $angle, $halign, $valign);
     }
 
     public function textSize(GDFont $font, int $xpos, int $ypos, string $text,
-            $angle=null, string $halign=null, string $valign=null)
+            $angle=null, ?string $halign=null, ?string $valign=null)
     {
         return $this->textDriver->textSize($font, $xpos, $ypos, $text,
                 $angle, $halign, $valign);

@@ -1,31 +1,61 @@
 name: tests
 
-on: [push]
+on: 
+  push:
+      branches:
+          - master
 
 jobs:
   no_ext_tests:
-    runs-on: ubuntu-22.04
+    runs-on: ${{ matrix.os }}
 
     strategy:
       fail-fast: true
       matrix:
-        php: ['8.1','8.2','8.3']
-  
+        include:
+          - name: PHP8.1
+            os: ubuntu-latest
+            php: '8.1'
+            phpunit: '10.5'
+          - name: PHP8.3
+            os: ubuntu-latest
+            php: '8.3'
+            phpunit: '11.5'
+          - name: PHP8.4
+            os: ubuntu-latest
+            php: '8.4'
+            phpunit: '11.5'
+
     steps:
+      - name: Setup PHP ${{ matrix.php }}
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          # PHP Extras
+          coverage: none
+          tools: composer, phpunit:${{ matrix.phpunit }}
+          #ini-values: "memory_limit=512M"
+          extensions: gd
+
       - name: Checkout codes
         uses: "actions/checkout@v4"
 
+      #- name: Composer
+      #  uses: php-actions/composer@v6
+      #  with:
+      #    php_version: ${{ matrix.php }}
+
       - name: Composer
-        uses: php-actions/composer@v6
-        with:
-          php_version: ${{ matrix.php }}
+        run: composer update
+
+      #- name: PHPUnit Tests
+      #  uses: php-actions/phpunit@v3
+      #  with:
+      #    configuration: tests/phpunit.xml
+      #    version: ${{ matrix.phpunit }}
+      #    php_version: ${{ matrix.php }}
+      #    filter: ReleaseTest
 
       - name: PHPUnit Tests
-        uses: php-actions/phpunit@v3
-        with:
-          configuration: tests/phpunit.xml
-          version: 10.5
-          php_version: ${{ matrix.php }}
-          php_extensions: gd
-        env:
-          PLOT_RENDERER_SKIP: true
+        run: PLOT_RENDERER_SKIP=true; export PLOT_RENDERER_SKIP; phpunit -c tests
+

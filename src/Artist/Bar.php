@@ -25,7 +25,7 @@ class Bar implements DataArtist
     public function __construct(
         Configure $config, $renderer, $mo, $scaling,
         NDArray $left, NDArray $bottom, NDArray $width, NDArray $height,
-        $color=null,string $label=null)
+        $color=null,?string $label=null)
     {
         $this->loadConfigure($config,
             ['legendLineWidth'],
@@ -52,7 +52,7 @@ class Bar implements DataArtist
         return [$minX,$minY,$maxX,$maxY];
     }
 
-    public function draw(OverlapChecker $checkOverlap=null)
+    public function draw(?OverlapChecker $checkOverlap=null)
     {
 
         $color = $this->renderer->allocateColor($this->color);

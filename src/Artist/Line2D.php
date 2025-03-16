@@ -28,8 +28,8 @@ class Line2D implements DataArtist
     public function __construct(
         Configure $config, $renderer, $mo, $scaling,
         NDArray $x, NDArray $y,
-        string $marker=null, string $style=null,
-        string $label=null,$color=null)
+        ?string $marker=null, ?string $style=null,
+        ?string $label=null,$color=null)
     {
         $this->loadConfigure($config,
             ['thickness','markerSize'],
@@ -79,7 +79,7 @@ class Line2D implements DataArtist
         $this->label = $label;
     }
 
-    public function draw(OverlapChecker $checkOverlap=null)
+    public function draw(?OverlapChecker $checkOverlap=null)
     {
         //[$scaleX,$offsetX,$scaleY,$offsetY] = $scaling;
         $origThickness = $this->renderer->getThickness();

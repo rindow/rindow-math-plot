@@ -20,7 +20,7 @@ abstract class AbstractAxisLabel
     protected $color;
     protected $margin;
 
-    public function __construct(Configure $config,$renderer,array $plotArea,string $text=null)
+    public function __construct(Configure $config,$renderer,array $plotArea,?string $text=null)
     {
         $this->loadConfigure($config,
             ['position','rotate','fontSize','color','margin'],

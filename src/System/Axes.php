@@ -205,8 +205,8 @@ class Axes
         NDArray $height,
         $width=null,
         $bottom=null,
-        string $label=null,
-        string $style=null) : array
+        ?string $label=null,
+        ?string $style=null) : array
     {
         if(is_array($x)) {
             $this->setXTickLabels(array_values($x));
@@ -292,8 +292,8 @@ class Axes
         NDArray $width,
         $height=null,
         $left=null,
-        string $label=null,
-        string $style=null) : array
+        ?string $label=null,
+        ?string $style=null) : array
     {
         if(is_array($y)) {
             $this->setYTickLabels(array_values($y));
@@ -377,8 +377,8 @@ class Axes
     }
 
     public function plot(
-        NDArray $x, NDArray $y=null,
-        string $marker=null, string $label=null) : array
+        NDArray $x, ?NDArray $y=null,
+        ?string $marker=null, ?string $label=null) : array
     {
         if($y===null) {
             $y = $x;
@@ -433,7 +433,7 @@ class Axes
         return $artists;
     }
 
-    protected function generateMarkerString(string $marker=null)
+    protected function generateMarkerString(?string $marker=null)
     {
         if($marker===null)
             return null;
@@ -447,7 +447,7 @@ class Axes
         return null;
     }
 
-    protected function generateLineStyleString(string $marker=null)
+    protected function generateLineStyleString(?string $marker=null)
     {
         if($marker===null)
             return null;
@@ -459,7 +459,7 @@ class Axes
         return null;
     }
 
-    protected function generateMarkerColor(string $marker=null)
+    protected function generateMarkerColor(?string $marker=null)
     {
         if($marker===null)
             return null;
@@ -474,8 +474,8 @@ class Axes
     }
 
     public function scatter(
-        NDArray $x, NDArray $y, NDArray $size=null,
-        $color=null,string $marker=null,$label=null) : DataArtist
+        NDArray $x, NDArray $y, ?NDArray $size=null,
+        $color=null,?string $marker=null,$label=null) : DataArtist
     {
         if($x->shape()!=$y->shape()) {
             throw new InvalidArgumentException('Shape of x and y must be same');
@@ -503,10 +503,10 @@ class Axes
 
     public function pie(
         NDArray $x,
-        array $labels=null,
-        float $startangle=null,
+        ?array $labels=null,
+        ?float $startangle=null,
         $autopct=null,
-        array $explodes=null) : array
+        ?array $explodes=null) : array
     {
         $count = $x->size();
         if($labels)
@@ -553,10 +553,10 @@ class Axes
 
     public function imshow(
         NDArray $x,
-        string $cmap=null,
-        array $norm=null,
-        array $extent=null,
-        string $origin=null) : DataArtist
+        ?string $cmap=null,
+        ?array $norm=null,
+        ?array $extent=null,
+        ?string $origin=null) : DataArtist
     {
         if($cmap==null)
             $cmap = 'viridis';
@@ -575,7 +575,7 @@ class Axes
         return $artist;
     }
 
-    public function legend(array $artists=null,array $labels=null)
+    public function legend(?array $artists=null,?array $labels=null)
     {
         if($artists==null) {
             $artists = [];
@@ -620,22 +620,22 @@ class Axes
         $this->title = $title;
     }
 
-    public function setXTicks(NDArray $ticks=null) : void
+    public function setXTicks(?NDArray $ticks=null) : void
     {
         $this->xTicks = $ticks;
     }
 
-    public function setXTickLabels(array $labels=null) : void
+    public function setXTickLabels(?array $labels=null) : void
     {
         $this->xTickLabels = $labels;
     }
 
-    public function setYTicks(NDArray $ticks=null) : void
+    public function setYTicks(?NDArray $ticks=null) : void
     {
         $this->yTicks = $ticks;
     }
 
-    public function setYTickLabels(array $labels=null) : void
+    public function setYTickLabels(?array $labels=null) : void
     {
         $this->yTickLabels = $labels;
     }

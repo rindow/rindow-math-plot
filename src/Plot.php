@@ -28,7 +28,7 @@ class Plot
     protected $skipRunViewer;
     protected $execBackground;
 
-    public function __construct(array $config=null,$matrixOperator=null,$renderer=null,$cmapManager=null)
+    public function __construct(?array $config=null,$matrixOperator=null,$renderer=null,$cmapManager=null)
     {
         $this->setConfig($config);
         $this->setMatrixOperator($matrixOperator);
@@ -38,7 +38,7 @@ class Plot
             $this->setCmapManager($cmapManager);
     }
 
-    protected function newConfig(array $config=null)
+    protected function newConfig(?array $config=null)
     {
         if($config) {
             $config = new Configure($config);
@@ -48,7 +48,7 @@ class Plot
         return $config;
     }
 
-    public function setConfig(array $config=null)
+    public function setConfig(?array $config=null)
     {
         $this->config = $this->newConfig($config);
         $this->loadConfigure($this->config,
@@ -115,7 +115,7 @@ class Plot
         $this->currentFig = -1;
     }
 
-    public function figure($num=null,array $figsize=null,array $config=null)
+    public function figure($num=null,?array $figsize=null,?array $config=null)
     {
         if(is_int($num)) {
             if(isset($this->figures[$num])) {
@@ -130,7 +130,7 @@ class Plot
         return $figure;
     }
 
-    public function subplots(int $nRows=1,int $nCols=1,array $figsize=null,array $config=null) : array
+    public function subplots(int $nRows=1,int $nCols=1,?array $figsize=null,?array $config=null) : array
     {
         $figure = $this->newFigure($figsize,$config);
         $n = $nRows*$nCols;
@@ -164,7 +164,7 @@ class Plot
         return $this->figures[$this->currentFig];
     }
 
-    public function subplot(int $nRows=null, int $nCols=null, int $idx=null)
+    public function subplot(?int $nRows=null, ?int $nCols=null, ?int $idx=null)
     {
         $figure = $this->currentFigure();
         $axes = $figure->addSubPlot($nRows,$nCols,$idx);
@@ -172,46 +172,46 @@ class Plot
     }
 
     public function bar($x, NDArray $height,
-        $width=null, $bottom=null, string $label=null, string $style=null) : array
+        $width=null, $bottom=null, ?string $label=null, ?string $style=null) : array
     {
         return $this->getAxes()->bar($x,$height,$width,$bottom,$label,$style);
     }
 
     public function barh($y, NDArray $width,
-        $height=null, $left=null, string $label=null, string $style=null) : array
+        $height=null, $left=null, ?string $label=null, ?string $style=null) : array
     {
         return $this->getAxes()->barh($y,$width,$height,$left,$label,$style);
     }
 
-    public function plot(NDArray $x, NDArray $y=null,
-                        string $marker=null, string $label=null) : array
+    public function plot(NDArray $x, ?NDArray $y=null,
+                        ?string $marker=null, ?string $label=null) : array
     {
         return $this->getAxes()->plot($x,$y,$marker,$label);
     }
 
-    public function scatter(NDArray $x, NDArray $y, NDArray $size=null,
-                    $color=null, string $marker=null, $label=null) : DataArtist
+    public function scatter(NDArray $x, NDArray $y, ?NDArray $size=null,
+                    $color=null, ?string $marker=null, $label=null) : DataArtist
     {
         return $this->getAxes()->scatter($x,$y,$size,$color,$marker,$label);
     }
 
-    public function pie(NDArray $x, array $labels=null,
-                    float $startangle=null, $autopct=null, array $explodes=null) : array
+    public function pie(NDArray $x, ?array $labels=null,
+                    ?float $startangle=null, $autopct=null, ?array $explodes=null) : array
     {
         return $this->getAxes()->pie($x,$labels,$startangle,$autopct,$explode);
     }
 
     public function imshow(
         NDArray $x,
-        string $cmap=null,
-        array $norm=null,
-        array $extent=null,
-        string $origin=null) : DataArtist
+        ?string $cmap=null,
+        ?array $norm=null,
+        ?array $extent=null,
+        ?string $origin=null) : DataArtist
     {
         return $this->getAxes()->imshow($x,$cmap,$norm,$extent,$origin);
     }
 
-    public function colorbar(Mappable $mappable,$ax=null,bool $absolute=null)
+    public function colorbar(Mappable $mappable,$ax=null,?bool $absolute=null)
     {
         $figure = $this->currentFigure();
         if($ax===null) {
@@ -220,7 +220,7 @@ class Plot
         return $figure->colorbar($mappable,$ax,$absolute);
     }
 
-    public function legend(array $artists=null,array $labels=null)
+    public function legend(?array $artists=null,?array $labels=null)
     {
         return $this->getAxes()->legend($artists,$labels);
     }
@@ -273,7 +273,7 @@ class Plot
         return $this->getAxes()->setYScale($type);
     }
 
-    public function show(string $filename=null)
+    public function show(?string $filename=null)
     {
         $renderer = $this->getRenderer();
         if(!$this->skipCleaning)

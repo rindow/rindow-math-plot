@@ -33,7 +33,7 @@ class Wedge implements DataArtist
         Configure $config, $renderer, $mo, $scaling,
         $center, $radius, $start, $end,
         $color=null,
-        string $label=null, string $pctText=null,
+        ?string $label=null, ?string $pctText=null,
         $explode=null)
     {
         $this->loadConfigure($config,
@@ -58,7 +58,7 @@ class Wedge implements DataArtist
         return [-1.0,-1.0,1.0,1.0];
     }
 
-    public function draw(OverlapChecker $checkOverlap=null)
+    public function draw(?OverlapChecker $checkOverlap=null)
     {
         [$x,$y] = $this->center;
         if($this->explode) {
